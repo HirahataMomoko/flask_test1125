@@ -20,6 +20,20 @@ def template():
     return render_template("index.html",name = py_name)
 
 
+# 天気の課題
+# 新しい/weatherというルートを作る。
+# 関数名はweather()
+# templatesフォルダの中に新しくweather.htmlを作成して
+# python側で変数に代入した天気を用いて、戻り値で、weather.htmlに値を渡して
+# 今日の天気はOOですと表示させる
+
+@app.route("/weather")
+def weather():
+    py_weather = "晴れ"
+    return render_template("weather.html",html_weather=py_weather)
+
+
+
 
 
 
