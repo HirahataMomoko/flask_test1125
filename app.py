@@ -1,5 +1,7 @@
 # FlaskからflaskをImportして、Flaskを使えるようにする。
-from flask import Flask,render_template
+from flask import Flask,render_template 
+# sqlはフラスクとは別物なので、別の行に書く。pythonが元々持っている機能を呼び出している。
+import sqlite3, random
 
 #appっていう名前でFlaskアプリを作っていくよ
 app = Flask(__name__)
@@ -50,7 +52,20 @@ def weather():
 
 @app.route("/color")
 def color():
-    py_color = "オレンジ"
+    # 「sqlite3でcolor.dbに接続してね」ということをconnに代入
+    conn = sqlite3.connect("color.db")
+    # 「sqlite3で接続したものを操作してね」ということをcに代入
+    c = conn.cursor()
+    # （）内のSQL文を実行してね
+    c.execute("SELECT * FROM colors")
+    # 実行結果を1つだけ取って参る
+    # py_color = c.fetchone()
+    # 実行結果を全て取って参る
+    py_color = c.fetchall()
+    py_color = random.choice(py_color)
+    # color.dbとの接続を終了
+    c.close()
+    print(py_color)
     return render_template("color.html",html_color = py_color)
 
 
