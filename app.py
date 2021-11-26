@@ -32,6 +32,29 @@ def weather():
     py_weather = "晴れ"
     return render_template("weather.html",html_weather=py_weather)
 
+# --------------------DAY2--------------------
+
+    # git add .
+    # git commit -m "天気の課題まで"
+    # git push origin main
+    #できたひとは、「gitignore」について調べてみてください！
+
+# 新しい/colorというルートを作る。
+# 関数名はcolor()
+# 戻り値で、テンプレート（color.HTML）を表示させてください
+# color.htmlに 今日のラッキーカラーは00です と表示するHTML（h1）を書きましょう
+# 00には、python側で作られたpy_colorという変数の値をhtml_colorに埋め込んで表示してください。
+# 表示の確認ができたらコミットまでしましょう。コミットメッセージは”ラッキーカラーページ実装”
+# ここまでできたらSlackにコメントお願いします！
+# ここまで終わったらFlaskでsqlite3を使うにはどうすればいいか？ググってみてね！
+
+@app.route("/color")
+def color():
+    py_color = "オレンジ"
+    return render_template("color.html",html_color = py_color)
+
+
+
 
 
 
