@@ -1,5 +1,7 @@
 # FlaskからflaskをImportして、Flaskを使えるようにする。
-from flask import Flask,render_template
+from flask import Flask,render_template 
+# sqlはフラスクとは別物なので、別の行に書く。pythonが元々持っている機能を呼び出している。
+import sqlite3, random
 
 #appっていう名前でFlaskアプリを作っていくよ
 app = Flask(__name__)
@@ -31,6 +33,42 @@ def template():
 def weather():
     py_weather = "晴れ"
     return render_template("weather.html",html_weather=py_weather)
+
+# --------------------DAY2--------------------
+
+    # git add .
+    # git commit -m "天気の課題まで"
+    # git push origin main
+    #できたひとは、「gitignore」について調べてみてください！
+
+# 新しい/colorというルートを作る。
+# 関数名はcolor()
+# 戻り値で、テンプレート（color.HTML）を表示させてください
+# color.htmlに 今日のラッキーカラーは00です と表示するHTML（h1）を書きましょう
+# 00には、python側で作られたpy_colorという変数の値をhtml_colorに埋め込んで表示してください。
+# 表示の確認ができたらコミットまでしましょう。コミットメッセージは”ラッキーカラーページ実装”
+# ここまでできたらSlackにコメントお願いします！
+# ここまで終わったらFlaskでsqlite3を使うにはどうすればいいか？ググってみてね！
+
+@app.route("/color")
+def color():
+    # 「sqlite3でcolor.dbに接続してね」ということをconnに代入
+    conn = sqlite3.connect("color.db")
+    # 「sqlite3で接続したものを操作してね」ということをcに代入
+    c = conn.cursor()
+    # （）内のSQL文を実行してね
+    c.execute("SELECT * FROM colors")
+    # 実行結果を1つだけ取って参る
+    # py_color = c.fetchone()
+    # 実行結果を全て取って参る
+    py_color = c.fetchall()
+    py_color = random.choice(py_color)
+    # color.dbとの接続を終了
+    c.close()
+    print(py_color)
+    return render_template("color.html",html_color = py_color)
+
+
 
 
 
