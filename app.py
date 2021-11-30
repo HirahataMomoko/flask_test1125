@@ -1,5 +1,5 @@
 # FlaskからflaskをImportして、Flaskを使えるようにする。
-from flask import Flask,render_template,request
+from flask import Flask,render_template,request, redirect
 # sqlはフラスクとは別物なので、別の行に書く。pythonが元々持っている機能を呼び出している。
 import sqlite3, random
 
@@ -85,7 +85,7 @@ def add_post():
     #DBに登録する（＝変更を加える）ので、変更内容を保存する
     conn.commit()
     c.close()
-    return "登録完了！"
+    return redirect("/list")
 
 #リストの表示
 @app.route("/list")
@@ -96,18 +96,57 @@ def list(): #DBへの接続と、データをとってくるSQL文書いてね
     task_list = []  #task_listという変数の中の配列に以下のものを入れる
     for row in c.fetchall():   
         task_list.append({"id":row[0],"task":row[1]})
-    c.close()        
-    print(task_list)
+    c.close()                 
+    print(task_list)         
     return render_template("list.html",task_list=task_list)
 
+# --------------------DAY4--------------------
+
+#編集
+@app.route("/edit/<int:id>")
+def edit(id):
+    conn = sqlite3.connect("flasktest.db")
+    c = conn.cursor()
+    c.execute("select task from tasks where id = ?",(id,))
+    task = c.fetchone()
+    c.close()
+    if task is not None:
+        task = task[0] #タプルを外している
+    else:
+        return "タスクがないよ"
+    print(task)
+    item = {"id":id,"task":task}
+    return render_template("edit.html",item = item)
+
+#タスクの内容を編集（更新）する
+@app.route("/edit",methods = ["POST"])
+def edit_post():
+#入力フォームのデータを取ってくる
+    task_id = request.form.get("task_id")
+    task = request.form.get("task")
+#データベースと接続
+    conn = sqlite3.connect("flasktest.db")
+    c = conn.cursor()
+    c.execute("update tasks set task = ? where id = ?",(task,task_id))
+#データの更新
+    conn.commit()
+    c.close()
+#/listを表示
+    return redirect("/list")
+
+#宿題！！
+#削除機能をつけよう
+#リストの編集ボタンの横に削除ボタンを作る
+#削除用のルーティングを作りタスクを削除
+#/listを表示する
 
 
 
 
-
-
-
-
+#404page
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('page_not_found.html'), 404
 
 
 
