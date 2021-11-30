@@ -1,5 +1,5 @@
 # FlaskからflaskをImportして、Flaskを使えるようにする。
-from flask import Flask,render_template 
+from flask import Flask,render_template,request
 # sqlはフラスクとは別物なので、別の行に書く。pythonが元々持っている機能を呼び出している。
 import sqlite3, random
 
@@ -67,6 +67,42 @@ def color():
     c.close()
     print(py_color)
     return render_template("color.html",html_color = py_color)
+
+# --------------------DAY3--------------------
+#タスク追加のページを表示
+@app.route("/add", methods = ["GET"])
+def add_get():
+    return render_template("add.html")
+
+#入力フォームで追加したタスクをDBに登録する処理
+@app.route("/add",methods = ["POST"])
+def add_post():
+    task = request.form.get("task")
+    #DB接続
+    conn = sqlite3.connect("flasktest.db")
+    c = conn.cursor()
+    c.execute("insert into tasks values (null,?)",(task,))
+    #DBに登録する（＝変更を加える）ので、変更内容を保存する
+    conn.commit()
+    c.close()
+    return "登録完了！"
+
+#リストの表示
+@app.route("/list")
+def list(): #DBへの接続と、データをとってくるSQL文書いてね
+    conn = sqlite3.connect("flasktest.db")
+    c = conn.cursor()
+    c.execute("select id,task from tasks")
+    task_list = []  #task_listという変数の中の配列に以下のものを入れる
+    for row in c.fetchall():   
+        task_list.append({"id":row[0],"task":row[1]})
+    c.close()        
+    print(task_list)
+    return render_template("list.html",task_list=task_list)
+
+
+
+
 
 
 
