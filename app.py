@@ -1,5 +1,5 @@
 # FlaskからflaskをImportして、Flaskを使えるようにする。
-from flask import Flask,render_template,request, redirect
+from flask import Flask,render_template,request,redirect,session
 # sqlはフラスクとは別物なので、別の行に書く。pythonが元々持っている機能を呼び出している。
 import sqlite3, random
 
@@ -134,11 +134,69 @@ def edit_post():
 #/listを表示
     return redirect("/list")
 
-#宿題！！
-#削除機能をつけよう
-#リストの編集ボタンの横に削除ボタンを作る
-#削除用のルーティングを作りタスクを削除
-#/listを表示するyo
+#削除
+@app.route("/del/<int:id>")
+def del_task(id):
+    conn = sqlite3.connect("flasktest.db")
+    c = conn.cursor()
+    c.execute("delete from tasks where id = ?",(id,))
+    conn.commit()
+    c.close()
+    return redirect("/list")
+
+# --------------------DAY5--------------------
+
+#新規登録のページを表示
+@app.route("/regist", methods=["GET"])
+def regist_get():
+    return render_template("regist.html")
+
+#新規登録の処理
+@app.route("/regist", methods=["POST"])
+def regist_post():
+    #入力フォームのデータを取ってくる
+    name = request.form.get("user_name")
+    password = request.form.get("password")
+    #DB接続
+    conn = sqlite3.connect("flasktest.db")
+    c = conn.cursor()
+    c.execute("insert into users values (null,?,?)",(name,password))
+    #DBに登録する（＝変更を加える）ので、変更内容を保存する
+    conn.commit()
+    c.close()
+    return "登録完了"
+
+#ログイン画面の表示
+@app.route("/login",methods = ["GET"])
+def login_get():
+    return render_template("login.html")
+
+#ログイン機能の処理
+@app.route("/login", methods = ["POST"])
+def login_post():
+    #入力フォームのデータを取ってくる
+    name = request.form.get("user_name")
+    password = request.form.get("password")
+    #DB接続
+    conn = sqlite3.connect("flasktest.db")
+    c = conn.cursor()
+    c.execute("select id from users where name = ? and password = ?",(name,password))
+    user_id = c.fetchone()  
+    c.close()
+    if user_id is None:
+        return render_template("login.html")
+    else:
+        session["user_id"] = user_id[0]
+        print(user_id)
+        return redirect("/list")
+
+
+
+
+
+
+
+
 
 
 
