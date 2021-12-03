@@ -72,84 +72,107 @@ def color():
 #タスク追加のページを表示
 @app.route("/add", methods = ["GET"])
 def add_get():
-    return render_template("add.html")
+    if "user_id" in session:
+        return render_template("add.html")
+    else:
+        return redirect("/login")
+    
 
 #入力フォームで追加したタスクをDBに登録する処理
 @app.route("/add",methods = ["POST"])
 def add_post():
-    task = request.form.get("task")
-    #DB接続
-    conn = sqlite3.connect("flasktest.db")
-    c = conn.cursor()
-    c.execute("insert into tasks values (null,?)",(task,))
-    #DBに登録する（＝変更を加える）ので、変更内容を保存する
-    conn.commit()
-    c.close()
-    return redirect("/list")
+    if "user_id" in session:
+        user_id = session["user_id"]
+        task = request.form.get("task")
+        #DB接続
+        conn = sqlite3.connect("flasktest.db")
+        c = conn.cursor()
+        c.execute("insert into tasks values (null,?,?)",(task,user_id))
+        #DBに登録する（＝変更を加える）ので、変更内容を保存する
+        conn.commit()
+        c.close()
+        return redirect("/list")
+    else:
+        return redirect("/login")
 
 #リストの表示
 @app.route("/list")
 def list(): #DBへの接続と、データをとってくるSQL文書いてね
-    conn = sqlite3.connect("flasktest.db")
-    c = conn.cursor()
-    c.execute("select id,task from tasks")
-    task_list = []  #task_listという変数の中の配列に以下のものを入れる
-    for row in c.fetchall():   
-        task_list.append({"id":row[0],"task":row[1]})
-    c.close()                 
-    print(task_list)         
-    return render_template("list.html",task_list=task_list)
-
+    if "user_id" in session:
+        user_id = session["user_id"]
+        conn = sqlite3.connect("flasktest.db")
+        c = conn.cursor()
+        c.execute("select id,task from tasks where user_id = ?",(user_id,))
+        task_list = []  #task_listという変数の中の配列に以下のものを入れる
+        for row in c.fetchall():   
+            task_list.append({"id":row[0],"task":row[1]})
+        c.close()                 
+        print(task_list)         
+        return render_template("list.html",task_list=task_list)
+    else:
+        return redirect("/login")
 # --------------------DAY4--------------------
 
 #編集
 @app.route("/edit/<int:id>")
 def edit(id):
-    conn = sqlite3.connect("flasktest.db")
-    c = conn.cursor()
-    c.execute("select task from tasks where id = ?",(id,))
-    task = c.fetchone()
-    c.close()
-    if task is not None:
-        task = task[0] #タプルを外している
+    if "user_id" in session:
+        conn = sqlite3.connect("flasktest.db")
+        c = conn.cursor()
+        c.execute("select task from tasks where id = ?",(id,))
+        task = c.fetchone()
+        c.close()
+        if task is not None:
+            task = task[0] #タプルを外している
+        else:
+            return "タスクがないよ"
+        print(task)
+        item = {"id":id,"task":task}
+        return render_template("edit.html",item = item)
     else:
-        return "タスクがないよ"
-    print(task)
-    item = {"id":id,"task":task}
-    return render_template("edit.html",item = item)
+        return redirect("/login")
 
 #タスクの内容を編集（更新）する
 @app.route("/edit",methods = ["POST"])
 def edit_post():
-#入力フォームのデータを取ってくる
-    task_id = request.form.get("task_id")
-    task = request.form.get("task")
-#データベースと接続
-    conn = sqlite3.connect("flasktest.db")
-    c = conn.cursor()
-    c.execute("update tasks set task = ? where id = ?",(task,task_id))
-#データの更新
-    conn.commit()
-    c.close()
-#/listを表示
-    return redirect("/list")
+    if "user_id" in session:
+        #入力フォームのデータを取ってくる
+        task_id = request.form.get("task_id")
+        task = request.form.get("task")
+        #データベースと接続
+        conn = sqlite3.connect("flasktest.db")
+        c = conn.cursor()
+        c.execute("update tasks set task = ? where id = ?",(task,task_id))
+        #データの更新
+        conn.commit()
+        c.close()
+        #/listを表示
+        return redirect("/list")
+    else:
+        return redirect("/login")
 
 #削除
 @app.route("/del/<int:id>")
 def del_task(id):
-    conn = sqlite3.connect("flasktest.db")
-    c = conn.cursor()
-    c.execute("delete from tasks where id = ?",(id,))
-    conn.commit()
-    c.close()
-    return redirect("/list")
+    if "user_id" in session:
+        conn = sqlite3.connect("flasktest.db")
+        c = conn.cursor()
+        c.execute("delete from tasks where id = ?",(id,))
+        conn.commit()
+        c.close()
+        return redirect("/list")
+    else:
+        return redirect("/login")
 
 # --------------------DAY5--------------------
 
 #新規登録のページを表示
 @app.route("/regist", methods=["GET"])
 def regist_get():
-    return render_template("regist.html")
+    if "user_id" in session:
+        return render_template("regist.html")
+    else:
+        return render_template("regist.html")
 
 #新規登録の処理
 @app.route("/regist", methods=["POST"])
@@ -164,12 +187,15 @@ def regist_post():
     #DBに登録する（＝変更を加える）ので、変更内容を保存する
     conn.commit()
     c.close()
-    return "登録完了"
+    return redirect("/login")
 
 #ログイン画面の表示
 @app.route("/login",methods = ["GET"])
 def login_get():
-    return render_template("login.html")
+    if "user_id" in session:
+        return redirect("/list")
+    else:
+        return render_template("login.html")
 
 #ログイン機能の処理
 @app.route("/login", methods = ["POST"])
@@ -189,6 +215,12 @@ def login_post():
         session["user_id"] = user_id[0]
         print(user_id)
         return redirect("/list")
+
+#ログアウト
+@app.route("/logout", methods = ["GET"])
+def logout():
+    session.pop("user_id",None) #sessionからuser_idを取り除く
+    return redirect("/login") 
 
 
 
